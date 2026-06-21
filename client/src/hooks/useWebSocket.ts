@@ -8,7 +8,7 @@ export function useWebSocket() {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<number>();
   const prevStateRef = useRef<AppState | null>(null);
-  const { notify, requestPermission } = useNotifications();
+  const { notify, requestPermission, permission } = useNotifications();
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -60,13 +60,12 @@ export function useWebSocket() {
   }, [notify]);
 
   useEffect(() => {
-    requestPermission();
     connect();
     return () => {
       wsRef.current?.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
-  }, [connect, requestPermission]);
+  }, [connect]);
 
-  return { state, connected };
+  return { state, connected, requestPermission, notificationPermission: permission };
 }

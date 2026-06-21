@@ -70,6 +70,23 @@ button:active {
   font-size: 12px;
   opacity: 0.8;
   margin-top: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.notify-btn {
+  margin-left: auto;
+  padding: 4px 8px;
+  font-size: 16px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.notify-btn.on {
+  opacity: 1;
+  background: rgba(255,255,255,0.25);
 }
 
 .connection-dot {

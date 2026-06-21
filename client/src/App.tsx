@@ -17,7 +17,7 @@ type Role = 'volunteer' | 'intern';
 type Tab = 'board' | 'escorts' | 'me' | 'announce' | 'coverage' | 'help';
 
 export default function App() {
-  const { state, connected } = useWebSocket();
+  const { state, connected, requestPermission, notificationPermission } = useWebSocket();
   const api = useApi();
   const [role, setRole] = useState<Role>(() => {
     return (localStorage.getItem('fifa-role') as Role) || 'volunteer';
@@ -109,6 +109,13 @@ export default function App() {
               </button>
             </span>
           )}
+          <button
+            className={`notify-btn ${notificationPermission === 'granted' ? 'on' : ''}`}
+            onClick={requestPermission}
+            title={notificationPermission === 'granted' ? 'Notifications on' : 'Enable notifications'}
+          >
+            {notificationPermission === 'granted' ? '🔔' : '🔕'}
+          </button>
         </div>
       </div>
 

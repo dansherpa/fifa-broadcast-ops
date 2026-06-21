@@ -1,16 +1,18 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export function useNotifications() {
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof Notification !== 'undefined' ? Notification.permission : 'denied'
+  );
   const permissionRef = useRef<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
 
   const requestPermission = useCallback(async () => {
     if (typeof Notification === 'undefined') return;
-    if (permissionRef.current === 'default') {
-      const result = await Notification.requestPermission();
-      permissionRef.current = result;
-    }
+    const result = await Notification.requestPermission();
+    permissionRef.current = result;
+    setPermission(result);
   }, []);
 
   const notify = useCallback((title: string, body: string) => {
@@ -42,5 +44,5 @@ export function useNotifications() {
     }
   }, []);
 
-  return { notify, requestPermission };
+  return { notify, requestPermission, permission };
 }
