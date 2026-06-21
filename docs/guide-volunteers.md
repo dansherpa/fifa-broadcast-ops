@@ -4,7 +4,7 @@
 
 A mobile web app that replaces the WhatsApp chaos. It shows interns where you are, lets you claim escort jobs, and keeps everyone on the same page — all from your phone browser.
 
-**URL:** _(will be provided on game day)_
+**URL:** https://fifa-broadcast-ops-production.up.railway.app/
 
 No login. No download. Just open the link.
 

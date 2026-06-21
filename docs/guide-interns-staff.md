@@ -4,7 +4,7 @@
 
 A real-time coordination board for managing volunteers during match days. Instead of juggling WhatsApp threads to figure out who's where and who's free, everything is visible at a glance on one screen.
 
-**URL:** _(will be provided)_
+**URL:** https://fifa-broadcast-ops-production.up.railway.app/
 
 No login. No accounts. Works on any phone browser.
 
