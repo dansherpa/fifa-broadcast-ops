@@ -1,5 +1,16 @@
 import { useCallback, useRef, useState } from 'react';
 
+const VAPID_PUBLIC_KEY = 'BP5KdrV0zcy__MRlpzIcUxMUm6-CIUPYUgH83weNDGr9Hr0yagz1Kiy8ChnzpqnZMEioZ_oDeAXyQFUX7yemIu0';
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
 export function useNotifications() {
   const [permission, setPermission] = useState<NotificationPermission>(
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
@@ -13,6 +24,24 @@ export function useNotifications() {
     const result = await Notification.requestPermission();
     permissionRef.current = result;
     setPermission(result);
+
+    if (result === 'granted') {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+        const subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        await fetch('/api/push/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(subscription),
+        });
+      } catch {
+        // Push subscription not supported or failed — fall back to in-app only
+      }
+    }
   }, []);
 
   const notify = useCallback((title: string, body: string) => {
@@ -40,7 +69,7 @@ export function useNotifications() {
 
     // Browser notification (when tab is backgrounded)
     if (document.hidden && permissionRef.current === 'granted') {
-      new Notification(title, { body, icon: '/favicon.ico' });
+      new Notification(title, { body, icon: '/icon-192.png' });
     }
   }, []);
 

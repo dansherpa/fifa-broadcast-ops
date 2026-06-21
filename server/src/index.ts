@@ -4,12 +4,49 @@ import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuid } from 'uuid';
+import webpush from 'web-push';
 
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 app.use(express.json());
+
+// --- Push Notifications ---
+
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BP5KdrV0zcy__MRlpzIcUxMUm6-CIUPYUgH83weNDGr9Hr0yagz1Kiy8ChnzpqnZMEioZ_oDeAXyQFUX7yemIu0';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'GFx6ECsk5c9uOUet4ac_MCRVD71YHyy28LTcERqnd8U';
+
+webpush.setVapidDetails(
+  'mailto:broadcast-ops@example.com',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
+
+interface PushSubscription {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+const pushSubscriptions: PushSubscription[] = [];
+
+function sendPushToAll(title: string, body: string, tag: string) {
+  const payload = JSON.stringify({ title, body, tag });
+  const stale: number[] = [];
+  pushSubscriptions.forEach((sub, i) => {
+    webpush.sendNotification(sub as any, payload).catch(() => {
+      stale.push(i);
+    });
+  });
+  // Clean up stale subscriptions after a short delay
+  if (stale.length > 0) {
+    setTimeout(() => {
+      for (let i = stale.length - 1; i >= 0; i--) {
+        pushSubscriptions.splice(stale[i], 1);
+      }
+    }, 1000);
+  }
+}
 
 // --- Persistence ---
 
@@ -32,6 +69,7 @@ function saveState() {
     staff: STAFF,
     locations: LOCATIONS,
     coverageRules,
+    pushSubscriptions,
   }, null, 2);
   fs.writeFileSync(STATE_FILE, data, 'utf-8');
 }
@@ -48,6 +86,7 @@ function loadState(): boolean {
       if (data.staff) { STAFF.length = 0; STAFF.push(...data.staff); }
       if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
       if (data.coverageRules) { coverageRules.length = 0; coverageRules.push(...data.coverageRules); }
+      if (data.pushSubscriptions) { pushSubscriptions.length = 0; pushSubscriptions.push(...data.pushSubscriptions); }
       console.log('State loaded from', STATE_FILE);
       return true;
     }
@@ -300,6 +339,7 @@ app.post('/api/escorts', (req, res) => {
   };
   escorts.unshift(task);
   broadcast({ type: 'state', data: getState() });
+  sendPushToAll('Escort Needed', `${task.mediaPartner}: ${task.from} → ${task.to}`, `escort-${task.id}`);
   res.json(task);
 });
 
@@ -347,6 +387,7 @@ app.post('/api/announcements', (req, res) => {
   };
   announcements.push(ann);
   broadcast({ type: 'state', data: getState() });
+  sendPushToAll('New Alert', ann.message, `announce-${ann.id}`);
   res.json(ann);
 });
 
@@ -435,6 +476,18 @@ app.put('/api/coverage', (req, res) => {
   }
   broadcast({ type: 'state', data: getState() });
   res.json(coverageRules);
+});
+
+// Push subscription endpoint
+app.post('/api/push/subscribe', (req, res) => {
+  const sub = req.body;
+  if (!sub || !sub.endpoint) return res.status(400).json({ error: 'Invalid subscription' });
+  const exists = pushSubscriptions.some(s => s.endpoint === sub.endpoint);
+  if (!exists) {
+    pushSubscriptions.push(sub);
+    saveState();
+  }
+  res.json({ ok: true });
 });
 
 // Serve static files in production
