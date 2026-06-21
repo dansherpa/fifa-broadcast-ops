@@ -387,7 +387,9 @@ app.put('/api/coverage', (req, res) => {
 });
 
 // Serve static files in production
-const clientDist = path.join(import.meta.dirname, '../../client/dist');
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDist = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientDist));
 app.get('*', (_req, res) => {
   res.sendFile(path.join(clientDist, 'index.html'));
