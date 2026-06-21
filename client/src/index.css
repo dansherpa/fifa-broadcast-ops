@@ -475,3 +475,65 @@ button:active {
   font-size: 11px;
   color: var(--gray-600);
 }
+
+/* Help guide */
+.help-guide {
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.help-guide h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.help-guide h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-top: 20px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.help-guide h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-800);
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+.help-guide p {
+  margin-bottom: 10px;
+}
+
+.help-guide ul, .help-guide ol {
+  margin-left: 20px;
+  margin-bottom: 10px;
+}
+
+.help-guide li {
+  margin-bottom: 4px;
+}
+
+.help-guide strong {
+  color: var(--primary);
+}
+
+.help-guide hr {
+  border: none;
+  border-top: 1px solid var(--gray-200);
+  margin: 20px 0;
+}
+
+.help-guide code {
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+}

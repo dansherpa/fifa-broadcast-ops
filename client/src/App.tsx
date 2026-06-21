@@ -11,9 +11,10 @@ import InternPicker from './components/InternPicker';
 import ManagePool from './components/ManagePool';
 import ManageLocations from './components/ManageLocations';
 import ManageInterns from './components/ManageInterns';
+import HelpGuide from './components/HelpGuide';
 
 type Role = 'volunteer' | 'intern';
-type Tab = 'board' | 'escorts' | 'me' | 'announce' | 'coverage';
+type Tab = 'board' | 'escorts' | 'me' | 'announce' | 'coverage' | 'help';
 
 export default function App() {
   const { state, connected } = useWebSocket();
@@ -144,6 +145,9 @@ export default function App() {
         <button className={`tab ${tab === 'coverage' ? 'active' : ''}`} onClick={() => setTab('coverage')}>
           Coverage
         </button>
+        <button className={`tab ${tab === 'help' ? 'active' : ''}`} onClick={() => setTab('help')}>
+          Help
+        </button>
       </div>
 
       {role === 'intern' && tab === 'board' && (
@@ -210,6 +214,10 @@ export default function App() {
           role={role}
           api={api}
         />
+      )}
+
+      {tab === 'help' && (
+        <HelpGuide role={role} />
       )}
 
       {showManagePool && (
