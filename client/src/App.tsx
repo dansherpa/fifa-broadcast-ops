@@ -68,13 +68,13 @@ export default function App() {
         </div>
         <div className="role-selector">
           <button
-            className={`role-btn ${role === 'volunteer' ? 'active' : ''}`}
+            className="role-btn"
             onClick={() => handleRoleChange('volunteer')}
           >
             Volunteer
           </button>
           <button
-            className={`role-btn ${role === 'intern' ? 'active' : ''}`}
+            className="role-btn active"
             onClick={() => handleRoleChange('intern')}
           >
             Intern / Staff
