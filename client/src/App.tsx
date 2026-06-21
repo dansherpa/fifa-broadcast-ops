@@ -1,0 +1,241 @@
+import { useState } from 'react';
+import { useWebSocket } from './hooks/useWebSocket';
+import { useApi } from './hooks/useApi';
+import { Volunteer } from './types';
+import PositionBoard from './components/PositionBoard';
+import EscortQueue from './components/EscortQueue';
+import VolunteerView from './components/VolunteerView';
+import Announcements from './components/Announcements';
+import Coverage from './components/Coverage';
+import InternPicker from './components/InternPicker';
+import ManagePool from './components/ManagePool';
+import ManageLocations from './components/ManageLocations';
+import ManageInterns from './components/ManageInterns';
+
+type Role = 'volunteer' | 'intern';
+type Tab = 'board' | 'escorts' | 'me' | 'announce' | 'coverage';
+
+export default function App() {
+  const { state, connected } = useWebSocket();
+  const api = useApi();
+  const [role, setRole] = useState<Role>(() => {
+    return (localStorage.getItem('fifa-role') as Role) || 'volunteer';
+  });
+  const [myId, setMyId] = useState<string | null>(() => {
+    return localStorage.getItem('fifa-my-id');
+  });
+  const [internName, setInternName] = useState<string | null>(() => {
+    return localStorage.getItem('fifa-intern-name');
+  });
+  const [tab, setTab] = useState<Tab>('board');
+  const [showManagePool, setShowManagePool] = useState(false);
+  const [showManageLocations, setShowManageLocations] = useState(false);
+  const [showManageInterns, setShowManageInterns] = useState(false);
+
+  if (!state) {
+    return (
+      <div className="app" style={{ padding: 40, textAlign: 'center' }}>
+        <p>Connecting...</p>
+      </div>
+    );
+  }
+
+  const handleRoleChange = (r: Role) => {
+    setRole(r);
+    localStorage.setItem('fifa-role', r);
+  };
+
+  const handleSelectVolunteer = (id: string) => {
+    setMyId(id);
+    localStorage.setItem('fifa-my-id', id);
+  };
+
+  const handleSelectIntern = (name: string) => {
+    setInternName(name);
+    localStorage.setItem('fifa-intern-name', name);
+  };
+
+  // Show intern picker if they haven't identified themselves yet
+  if (role === 'intern' && !internName) {
+    return (
+      <div className="app">
+        <div className="header">
+          <h1>
+            <span className={`connection-dot ${connected ? 'connected' : 'disconnected'}`} />
+            Broadcast Ops - Boston
+          </h1>
+          <div className="header-sub">FIFA World Cup 2026</div>
+        </div>
+        <div className="role-selector">
+          <button
+            className={`role-btn ${role === 'volunteer' ? 'active' : ''}`}
+            onClick={() => handleRoleChange('volunteer')}
+          >
+            Volunteer
+          </button>
+          <button
+            className={`role-btn ${role === 'intern' ? 'active' : ''}`}
+            onClick={() => handleRoleChange('intern')}
+          >
+            Intern / Staff
+          </button>
+        </div>
+        <InternPicker interns={state.interns} staff={state.staff} onSelect={handleSelectIntern} />
+      </div>
+    );
+  }
+
+  const me: Volunteer | undefined = state.volunteers.find(v => v.id === myId);
+  const pendingEscorts = state.escorts.filter(e => e.status === 'pending').length;
+
+  return (
+    <div className="app">
+      <div className="header">
+        <h1>
+          <span className={`connection-dot ${connected ? 'connected' : 'disconnected'}`} />
+          Broadcast Ops - Boston
+        </h1>
+        <div className="header-sub">
+          FIFA World Cup 2026
+          {role === 'intern' && internName && (
+            <span style={{ marginLeft: 8 }}>
+              · {internName}
+              <button
+                style={{ marginLeft: 6, fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.2)', color: 'white', borderRadius: 8, border: 'none' }}
+                onClick={() => { setInternName(null); localStorage.removeItem('fifa-intern-name'); }}
+              >
+                switch
+              </button>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="role-selector">
+        <button
+          className={`role-btn ${role === 'volunteer' ? 'active' : ''}`}
+          onClick={() => handleRoleChange('volunteer')}
+        >
+          Volunteer
+        </button>
+        <button
+          className={`role-btn ${role === 'intern' ? 'active' : ''}`}
+          onClick={() => handleRoleChange('intern')}
+        >
+          Intern / Staff
+        </button>
+      </div>
+
+      <div className="tabs">
+        <button className={`tab ${tab === 'board' ? 'active' : ''}`} onClick={() => setTab('board')}>
+          Board
+        </button>
+        <button className={`tab ${tab === 'escorts' ? 'active' : ''}`} onClick={() => setTab('escorts')}>
+          Escorts{pendingEscorts > 0 && <span className="badge">{pendingEscorts}</span>}
+        </button>
+        {role === 'volunteer' && (
+          <button className={`tab ${tab === 'me' ? 'active' : ''}`} onClick={() => setTab('me')}>
+            My Status
+          </button>
+        )}
+        <button className={`tab ${tab === 'announce' ? 'active' : ''}`} onClick={() => setTab('announce')}>
+          Alerts
+        </button>
+        <button className={`tab ${tab === 'coverage' ? 'active' : ''}`} onClick={() => setTab('coverage')}>
+          Coverage
+        </button>
+      </div>
+
+      {role === 'intern' && tab === 'board' && (
+        <div style={{ padding: '12px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button className="btn-secondary" style={{ flex: 1, minWidth: '45%' }} onClick={() => setShowManagePool(true)}>
+            Manage Volunteers
+          </button>
+          <button className="btn-secondary" style={{ flex: 1, minWidth: '45%' }} onClick={() => setShowManageLocations(true)}>
+            Manage Locations
+          </button>
+          <button className="btn-secondary" style={{ flex: 1, minWidth: '45%' }} onClick={() => setShowManageInterns(true)}>
+            Manage Interns/Staff
+          </button>
+        </div>
+      )}
+
+      {tab === 'board' && (
+        <PositionBoard
+          volunteers={state.volunteers}
+          locations={state.locations}
+          coverageRules={state.coverageRules}
+          role={role}
+          api={api}
+        />
+      )}
+
+      {tab === 'escorts' && (
+        <EscortQueue
+          escorts={state.escorts}
+          volunteers={state.volunteers}
+          locations={state.locations}
+          role={role}
+          myId={myId}
+          internName={internName}
+          api={api}
+        />
+      )}
+
+      {tab === 'me' && role === 'volunteer' && (
+        <VolunteerView
+          volunteers={state.volunteers}
+          me={me}
+          myId={myId}
+          locations={state.locations}
+          onSelect={handleSelectVolunteer}
+          api={api}
+        />
+      )}
+
+      {tab === 'announce' && (
+        <Announcements
+          announcements={state.announcements}
+          role={role}
+          internName={internName}
+          api={api}
+        />
+      )}
+
+      {tab === 'coverage' && (
+        <Coverage
+          volunteers={state.volunteers}
+          locations={state.locations}
+          coverageRules={state.coverageRules}
+          role={role}
+          api={api}
+        />
+      )}
+
+      {showManagePool && (
+        <ManagePool
+          volunteers={state.volunteers}
+          api={api}
+          onClose={() => setShowManagePool(false)}
+        />
+      )}
+
+      {showManageLocations && (
+        <ManageLocations
+          locations={state.locations}
+          api={api}
+          onClose={() => setShowManageLocations(false)}
+        />
+      )}
+
+      {showManageInterns && (
+        <ManageInterns
+          interns={state.interns}
+          staff={state.staff}
+          api={api}
+          onClose={() => setShowManageInterns(false)}
+        />
+      )}
+    </div>
+  );
+}

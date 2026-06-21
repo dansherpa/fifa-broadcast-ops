@@ -1,0 +1,42 @@
+export interface Volunteer {
+  id: string;
+  name: string;
+  location: string;
+  status: 'available' | 'on-break' | 'escorting' | 'off-duty';
+  checkedIn: boolean;
+  lastUpdate: number;
+}
+
+export interface EscortTask {
+  id: string;
+  mediaPartner: string;
+  from: string;
+  to: string;
+  status: 'pending' | 'claimed' | 'completed';
+  assignedTo?: string;
+  createdAt: number;
+  createdBy: string;
+  completedAt?: number;
+}
+
+export interface Announcement {
+  id: string;
+  message: string;
+  createdAt: number;
+  createdBy: string;
+}
+
+export interface CoverageRule {
+  location: string;
+  minRequired: number;
+}
+
+export interface AppState {
+  volunteers: Volunteer[];
+  escorts: EscortTask[];
+  announcements: Announcement[];
+  locations: string[];
+  interns: string[];
+  staff: string[];
+  coverageRules: CoverageRule[];
+}
