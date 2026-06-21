@@ -1,7 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
 
-const VAPID_PUBLIC_KEY = 'BP5KdrV0zcy__MRlpzIcUxMUm6-CIUPYUgH83weNDGr9Hr0yagz1Kiy8ChnzpqnZMEioZ_oDeAXyQFUX7yemIu0';
-
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -27,11 +25,15 @@ export function useNotifications() {
 
     if (result === 'granted') {
       try {
+        const keyRes = await fetch('/api/push/vapid-key');
+        const { key } = await keyRes.json();
+        if (!key) return;
+
         const reg = await navigator.serviceWorker.register('/sw.js');
         await navigator.serviceWorker.ready;
         const subscription = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+          applicationServerKey: urlBase64ToUint8Array(key),
         });
         await fetch('/api/push/subscribe', {
           method: 'POST',

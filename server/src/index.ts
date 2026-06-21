@@ -14,14 +14,16 @@ app.use(express.json());
 
 // --- Push Notifications ---
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BP5KdrV0zcy__MRlpzIcUxMUm6-CIUPYUgH83weNDGr9Hr0yagz1Kiy8ChnzpqnZMEioZ_oDeAXyQFUX7yemIu0';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'GFx6ECsk5c9uOUet4ac_MCRVD71YHyy28LTcERqnd8U';
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 
-webpush.setVapidDetails(
-  'mailto:broadcast-ops@example.com',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-);
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    'mailto:broadcast-ops@example.com',
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  );
+}
 
 interface PushSubscription {
   endpoint: string;
@@ -31,6 +33,7 @@ interface PushSubscription {
 const pushSubscriptions: PushSubscription[] = [];
 
 function sendPushToAll(title: string, body: string, tag: string) {
+  if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) return;
   const payload = JSON.stringify({ title, body, tag });
   const stale: number[] = [];
   pushSubscriptions.forEach((sub, i) => {
@@ -476,6 +479,11 @@ app.put('/api/coverage', (req, res) => {
   }
   broadcast({ type: 'state', data: getState() });
   res.json(coverageRules);
+});
+
+// Push VAPID public key endpoint
+app.get('/api/push/vapid-key', (_req, res) => {
+  res.json({ key: VAPID_PUBLIC_KEY || null });
 });
 
 // Push subscription endpoint

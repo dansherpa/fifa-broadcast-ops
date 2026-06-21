@@ -10,6 +10,27 @@ No login. No accounts. Works on any phone browser.
 
 ---
 
+## Install on Your Phone (Recommended)
+
+Installing the app on your home screen gives you push notifications — you'll get alerted about new escort requests and announcements even if your phone is locked.
+
+**iPhone (iOS):**
+1. Open the URL above in **Safari**
+2. Tap the **Share button** (square with arrow, bottom of screen)
+3. Scroll down and tap **"Add to Home Screen"**
+4. Tap **Add**
+5. Open the app from your home screen
+6. Tap the 🔕 bell icon in the header → allow notifications
+
+**Android:**
+1. Open the URL in Chrome
+2. Tap the three-dot menu → **"Add to Home Screen"** (or you may see an install banner)
+3. Tap the 🔕 bell icon → allow notifications
+
+If you skip this step, the app still works in your browser — you just won't get notifications when your phone is locked.
+
+---
+
 ## Getting Started
 
 1. Open the link on your phone
