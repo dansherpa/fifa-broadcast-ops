@@ -1,11 +1,14 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { AppState } from '../types';
+import { useNotifications } from './useNotifications';
 
 export function useWebSocket() {
   const [state, setState] = useState<AppState | null>(null);
   const [connected, setConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<number>();
+  const prevStateRef = useRef<AppState | null>(null);
+  const { notify, requestPermission } = useNotifications();
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -22,7 +25,27 @@ export function useWebSocket() {
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'state') {
-        setState(msg.data);
+        const newState = msg.data as AppState;
+        const prev = prevStateRef.current;
+
+        if (prev) {
+          // New announcement
+          if (newState.announcements.length > prev.announcements.length) {
+            const latest = newState.announcements[newState.announcements.length - 1];
+            notify('New Alert', latest.message);
+          }
+
+          // New escort request
+          const newPending = newState.escorts.filter(e => e.status === 'pending');
+          const oldPending = prev.escorts.filter(e => e.status === 'pending');
+          if (newPending.length > oldPending.length) {
+            const latest = newPending[0];
+            notify('Escort Needed', `${latest.mediaPartner}: ${latest.from} → ${latest.to}`);
+          }
+        }
+
+        prevStateRef.current = newState;
+        setState(newState);
       }
     };
 
@@ -34,15 +57,16 @@ export function useWebSocket() {
     ws.onerror = () => ws.close();
 
     wsRef.current = ws;
-  }, []);
+  }, [notify]);
 
   useEffect(() => {
+    requestPermission();
     connect();
     return () => {
       wsRef.current?.close();
       if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
     };
-  }, [connect]);
+  }, [connect, requestPermission]);
 
   return { state, connected };
 }
