@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import path from 'path';
+import fs from 'fs';
 import { v4 as uuid } from 'uuid';
 
 const app = express();
@@ -9,6 +10,52 @@ const server = createServer(app);
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 app.use(express.json());
+
+// --- Persistence ---
+
+const DATA_DIR = process.env.DATA_DIR || path.join(path.dirname(new URL(import.meta.url).pathname), '../../data');
+const STATE_FILE = path.join(DATA_DIR, 'state.json');
+
+function ensureDataDir() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+function saveState() {
+  ensureDataDir();
+  const data = JSON.stringify({
+    volunteers: VOLUNTEER_POOL,
+    escorts,
+    announcements,
+    interns: INTERNS,
+    staff: STAFF,
+    locations: LOCATIONS,
+    coverageRules,
+  }, null, 2);
+  fs.writeFileSync(STATE_FILE, data, 'utf-8');
+}
+
+function loadState(): boolean {
+  try {
+    if (fs.existsSync(STATE_FILE)) {
+      const raw = fs.readFileSync(STATE_FILE, 'utf-8');
+      const data = JSON.parse(raw);
+      if (data.volunteers) { VOLUNTEER_POOL.length = 0; VOLUNTEER_POOL.push(...data.volunteers); }
+      if (data.escorts) { escorts.length = 0; escorts.push(...data.escorts); }
+      if (data.announcements) { announcements.length = 0; announcements.push(...data.announcements); }
+      if (data.interns) { INTERNS.length = 0; INTERNS.push(...data.interns); }
+      if (data.staff) { STAFF.length = 0; STAFF.push(...data.staff); }
+      if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
+      if (data.coverageRules) { coverageRules.length = 0; coverageRules.push(...data.coverageRules); }
+      console.log('State loaded from', STATE_FILE);
+      return true;
+    }
+  } catch (err) {
+    console.error('Failed to load state, using defaults:', err);
+  }
+  return false;
+}
 
 // --- Types ---
 
@@ -101,11 +148,15 @@ const coverageRules: CoverageRule[] = [
   { location: 'BIO', minRequired: 1 },
 ];
 
+// Load persisted state (overrides defaults if file exists)
+loadState();
+
 // --- WebSocket ---
 
 const clients = new Set<WebSocket>();
 
 function broadcast(data: object) {
+  saveState();
   const msg = JSON.stringify(data);
   clients.forEach(ws => {
     if (ws.readyState === WebSocket.OPEN) {
@@ -387,8 +438,7 @@ app.put('/api/coverage', (req, res) => {
 });
 
 // Serve static files in production
-import { fileURLToPath } from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const clientDist = path.join(__dirname, '../../client/dist');
 app.use(express.static(clientDist));
 app.get('*', (_req, res) => {
