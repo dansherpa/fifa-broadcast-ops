@@ -84,7 +84,7 @@ function loadState(): boolean {
       const data = JSON.parse(raw);
       if (data.volunteers) { VOLUNTEER_POOL.length = 0; VOLUNTEER_POOL.push(...data.volunteers); }
       if (data.escorts) { escorts.length = 0; escorts.push(...data.escorts); }
-      if (data.announcements) { announcements.length = 0; announcements.push(...data.announcements); }
+      if (data.announcements) { announcements.length = 0; announcements.push(...data.announcements.map((a: Announcement) => ({ reactions: { onIt: [], question: [] }, replies: [], ...a }))); }
       if (data.interns) { INTERNS.length = 0; INTERNS.push(...data.interns); }
       if (data.staff) { STAFF.length = 0; STAFF.push(...data.staff); }
       if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
@@ -122,11 +122,20 @@ interface EscortTask {
   completedAt?: number;
 }
 
+interface AnnouncementReply {
+  id: string;
+  message: string;
+  createdBy: string;
+  createdAt: number;
+}
+
 interface Announcement {
   id: string;
   message: string;
   createdAt: number;
   createdBy: string;
+  reactions: { onIt: string[]; question: string[] };
+  replies: AnnouncementReply[];
 }
 
 interface CoverageRule {
@@ -387,11 +396,44 @@ app.post('/api/announcements', (req, res) => {
     message: req.body.message,
     createdAt: Date.now(),
     createdBy: req.body.createdBy || 'Staff',
+    reactions: { onIt: [], question: [] },
+    replies: [],
   };
   announcements.push(ann);
   broadcast({ type: 'state', data: getState() });
   sendPushToAll('New Alert', ann.message, `announce-${ann.id}`);
   res.json(ann);
+});
+
+// React to announcement
+app.post('/api/announcements/:id/react', (req, res) => {
+  const ann = announcements.find(a => a.id === req.params.id);
+  if (!ann) return res.status(404).json({ error: 'Not found' });
+  const { reaction, name } = req.body as { reaction: 'onIt' | 'question'; name: string };
+  if (!reaction || !name) return res.status(400).json({ error: 'Missing reaction or name' });
+  if (!ann.reactions) ann.reactions = { onIt: [], question: [] };
+  // Toggle: remove from both first, then add if not already present
+  ann.reactions.onIt = ann.reactions.onIt.filter(n => n !== name);
+  ann.reactions.question = ann.reactions.question.filter(n => n !== name);
+  const previous = reaction === 'onIt' ? ann.reactions.onIt : ann.reactions.question;
+  if (!previous.includes(name)) previous.push(name);
+  broadcast({ type: 'state', data: getState() });
+  saveState();
+  res.json(ann);
+});
+
+// Reply to announcement
+app.post('/api/announcements/:id/reply', (req, res) => {
+  const ann = announcements.find(a => a.id === req.params.id);
+  if (!ann) return res.status(404).json({ error: 'Not found' });
+  const { message, createdBy } = req.body as { message: string; createdBy: string };
+  if (!message || !createdBy) return res.status(400).json({ error: 'Missing message or createdBy' });
+  if (!ann.replies) ann.replies = [];
+  const reply: AnnouncementReply = { id: uuid(), message, createdBy, createdAt: Date.now() };
+  ann.replies.push(reply);
+  broadcast({ type: 'state', data: getState() });
+  saveState();
+  res.json(reply);
 });
 
 // Delete announcement

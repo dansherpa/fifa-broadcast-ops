@@ -19,11 +19,20 @@ export interface EscortTask {
   completedAt?: number;
 }
 
+export interface AnnouncementReply {
+  id: string;
+  message: string;
+  createdBy: string;
+  createdAt: number;
+}
+
 export interface Announcement {
   id: string;
   message: string;
   createdAt: number;
   createdBy: string;
+  reactions: { onIt: string[]; question: string[] };
+  replies: AnnouncementReply[];
 }
 
 export interface CoverageRule {
