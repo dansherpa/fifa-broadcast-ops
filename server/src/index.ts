@@ -460,6 +460,22 @@ app.delete('/api/announcements/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// Reset day — clears volatile state, preserves config
+app.post('/api/reset-day', (req, res) => {
+  VOLUNTEER_POOL.forEach(v => {
+    v.checkedIn = false;
+    v.status = 'off-duty';
+    v.location = '';
+    v.lastUpdate = Date.now();
+  });
+  escorts.length = 0;
+  announcements.length = 0;
+  locationEvents.length = 0;
+  broadcast({ type: 'state', data: getState() });
+  saveState();
+  res.json({ ok: true });
+});
+
 // Add intern
 app.post('/api/interns', (req, res) => {
   const { name } = req.body;

@@ -32,6 +32,7 @@ export default function App() {
   const [showManagePool, setShowManagePool] = useState(false);
   const [showManageLocations, setShowManageLocations] = useState(false);
   const [showManageInterns, setShowManageInterns] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   if (!state) {
     return (
@@ -198,6 +199,39 @@ export default function App() {
           <button className="btn-secondary" style={{ flex: 1, minWidth: '45%' }} onClick={() => setShowManageInterns(true)}>
             Manage Interns/Staff
           </button>
+          <button className="btn-danger" style={{ flex: 1, minWidth: '45%' }} onClick={() => setShowResetConfirm(true)}>
+            Reset Day
+          </button>
+        </div>
+      )}
+
+      {showResetConfirm && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ background: 'white', borderRadius: 12, padding: 24, maxWidth: 360, width: '100%' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Reset Day?</div>
+            <p style={{ fontSize: 14, color: 'var(--gray-600)', marginBottom: 20 }}>
+              This will check out all volunteers, clear all chat messages, location history, and escort requests.
+              Volunteer names, locations, and intern/staff lists will be kept.
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--red)', marginBottom: 20 }}>
+              This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowResetConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn-danger"
+                style={{ flex: 1 }}
+                onClick={async () => {
+                  await api.post('/api/reset-day');
+                  setShowResetConfirm(false);
+                }}
+              >
+                Yes, Reset
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
