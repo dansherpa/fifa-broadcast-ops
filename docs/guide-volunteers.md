@@ -34,10 +34,8 @@ If you skip this step, the app still works in your browser — you just won't ge
 ## Getting Started (30 seconds)
 
 1. Open the link on your phone
-2. Tap **Volunteer** at the top
-3. Go to the **My Status** tab
-4. Tap your name from the grid
-5. Tap **Check In**
+2. Tap **Volunteer** then tap your name from the grid
+3. Tap **Check In**
 
 That's it — you're on the board and interns can see you.
 
@@ -45,7 +43,7 @@ That's it — you're on the board and interns can see you.
 
 ## Updating Your Location
 
-When you move somewhere, tap **My Status** → tap the new location button.
+When you move somewhere, tap the **My Status** tab → tap the new location button.
 
 Locations include: Media Center, BIO, Commentary, Press Box (Red), Press Box (Blue), Pitch, Announce Platform, etc.
 
@@ -92,7 +90,7 @@ The **Alerts** tab shows messages from interns/staff — things like "Media Cent
 
 ### Scenario: You just arrived for a 3-9 shift
 
-1. Open the app → Tap your name → Check In
+1. Open the app → Tap **Volunteer** → tap your name → Check In
 2. Check the **Board** tab — see where coverage is thin
 3. Check **Escorts** — any pending requests you can grab?
 4. Head to where you're needed and update your location
