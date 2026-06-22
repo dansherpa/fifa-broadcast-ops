@@ -56,8 +56,10 @@ export default function App() {
     localStorage.setItem('fifa-intern-name', name);
   };
 
-  // Show intern picker if they haven't identified themselves yet
-  if (role === 'intern' && !internName) {
+  const me: Volunteer | undefined = state.volunteers.find(v => v.id === myId);
+  const isIdentified = (role === 'volunteer' && !!myId && !!me) || (role === 'intern' && !!internName);
+
+  if (!isIdentified) {
     return (
       <div className="app">
         <div className="header">
@@ -67,26 +69,43 @@ export default function App() {
           </h1>
           <div className="header-sub">FIFA World Cup 2026</div>
         </div>
-        <div className="role-selector">
-          <button
-            className="role-btn"
-            onClick={() => handleRoleChange('volunteer')}
-          >
-            Volunteer
-          </button>
-          <button
-            className="role-btn active"
-            onClick={() => handleRoleChange('intern')}
-          >
-            Intern / Staff
-          </button>
+        <div style={{ padding: '32px 16px 16px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>Who are you?</div>
+            <p style={{ fontSize: 14, color: 'var(--gray-600)', margin: 0 }}>Tap your name to get started</p>
+          </div>
+          <div className="role-selector">
+            <button
+              className={`role-btn ${role === 'volunteer' ? 'active' : ''}`}
+              onClick={() => handleRoleChange('volunteer')}
+            >
+              Volunteer
+            </button>
+            <button
+              className={`role-btn ${role === 'intern' ? 'active' : ''}`}
+              onClick={() => handleRoleChange('intern')}
+            >
+              Intern / Staff
+            </button>
+          </div>
+          {role === 'volunteer' && (
+            <div className="card">
+              <div className="checkin-grid">
+                {state.volunteers.map(vol => (
+                  <button key={vol.id} className="checkin-btn" onClick={() => handleSelectVolunteer(vol.id)}>
+                    {vol.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {role === 'intern' && (
+            <InternPicker interns={state.interns} staff={state.staff} onSelect={handleSelectIntern} />
+          )}
         </div>
-        <InternPicker interns={state.interns} staff={state.staff} onSelect={handleSelectIntern} />
       </div>
     );
   }
-
-  const me: Volunteer | undefined = state.volunteers.find(v => v.id === myId);
   const pendingEscorts = state.escorts.filter(e => e.status === 'pending').length;
 
   return (
