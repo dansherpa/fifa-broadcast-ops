@@ -68,6 +68,7 @@ function saveState() {
     volunteers: VOLUNTEER_POOL,
     escorts,
     announcements,
+    locationEvents: locationEvents.slice(-200),
     interns: INTERNS,
     staff: STAFF,
     locations: LOCATIONS,
@@ -89,6 +90,7 @@ function loadState(): boolean {
       if (data.staff) { STAFF.length = 0; STAFF.push(...data.staff); }
       if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
       if (data.coverageRules) { coverageRules.length = 0; coverageRules.push(...data.coverageRules); }
+      if (data.locationEvents) { locationEvents.length = 0; locationEvents.push(...data.locationEvents); }
       if (data.pushSubscriptions) { pushSubscriptions.length = 0; pushSubscriptions.push(...data.pushSubscriptions); }
       console.log('State loaded from', STATE_FILE);
       return true;
@@ -139,6 +141,14 @@ interface Announcement {
   replies: AnnouncementReply[];
 }
 
+interface LocationEvent {
+  id: string;
+  volunteerName: string;
+  eventType: 'checkin' | 'checkout' | 'location';
+  location: string;
+  timestamp: number;
+}
+
 interface CoverageRule {
   location: string;
   minRequired: number;
@@ -185,6 +195,7 @@ const VOLUNTEER_POOL: Volunteer[] = [
 
 let escorts: EscortTask[] = [];
 let announcements: Announcement[] = [];
+let locationEvents: LocationEvent[] = [];
 
 const INTERNS: string[] = [
   'Stella', 'Kira', 'Isabelle', 'Cobi', 'Diyah',
@@ -264,6 +275,7 @@ function getState() {
     volunteers: sortedVolunteers(),
     escorts,
     announcements: announcements.slice(-20),
+    locationEvents: locationEvents.slice(-200),
     locations: sortedLocations(),
     interns: sortedInterns(),
     staff: sortedStaff(),
@@ -292,6 +304,7 @@ app.post('/api/volunteers/:id/checkin', (req, res) => {
   vol.status = 'available';
   vol.location = req.body.location || 'Volunteer Center';
   vol.lastUpdate = Date.now();
+  locationEvents.push({ id: uuid(), volunteerName: vol.name, eventType: 'checkin', location: vol.location, timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   res.json(vol);
 });
@@ -304,6 +317,7 @@ app.post('/api/volunteers/:id/checkout', (req, res) => {
   vol.status = 'off-duty';
   vol.location = '';
   vol.lastUpdate = Date.now();
+  locationEvents.push({ id: uuid(), volunteerName: vol.name, eventType: 'checkout', location: '', timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   res.json(vol);
 });
@@ -314,6 +328,7 @@ app.post('/api/volunteers/:id/location', (req, res) => {
   if (!vol) return res.status(404).json({ error: 'Not found' });
   vol.location = req.body.location;
   vol.lastUpdate = Date.now();
+  locationEvents.push({ id: uuid(), volunteerName: vol.name, eventType: 'location', location: vol.location, timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   res.json(vol);
 });

@@ -237,6 +237,7 @@ export default function App() {
       {tab === 'announce' && (
         <Announcements
           announcements={state.announcements}
+          locationEvents={state.locationEvents ?? []}
           role={role}
           myName={role === 'volunteer' ? (me?.name ?? null) : (internName ?? null)}
           api={api}

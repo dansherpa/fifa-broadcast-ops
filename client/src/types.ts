@@ -41,10 +41,19 @@ export interface CoverageRule {
   minRequired: number;
 }
 
+export interface LocationEvent {
+  id: string;
+  volunteerName: string;
+  eventType: 'checkin' | 'checkout' | 'location';
+  location: string;
+  timestamp: number;
+}
+
 export interface AppState {
   volunteers: Volunteer[];
   escorts: EscortTask[];
   announcements: Announcement[];
+  locationEvents: LocationEvent[];
   locations: string[];
   interns: string[];
   staff: string[];

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Announcement } from '../types';
+import { Announcement, LocationEvent } from '../types';
 
 interface Props {
   announcements: Announcement[];
+  locationEvents: LocationEvent[];
   role: string;
   myName?: string | null;
   api: {
@@ -11,7 +12,7 @@ interface Props {
   };
 }
 
-export default function Announcements({ announcements, role, myName, api }: Props) {
+export default function Announcements({ announcements, locationEvents, role, myName, api }: Props) {
   const [message, setMessage] = useState('');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [showReply, setShowReply] = useState<Record<string, boolean>>({});
@@ -42,6 +43,21 @@ export default function Announcements({ announcements, role, myName, api }: Prop
     return `${Math.floor(mins / 60)}h ago`;
   }
 
+  type TimelineItem =
+    | { kind: 'announcement'; data: Announcement; ts: number }
+    | { kind: 'location'; data: LocationEvent; ts: number };
+
+  const timeline: TimelineItem[] = [
+    ...announcements.map(a => ({ kind: 'announcement' as const, data: a, ts: a.createdAt })),
+    ...locationEvents.map(e => ({ kind: 'location' as const, data: e, ts: e.timestamp })),
+  ].sort((a, b) => b.ts - a.ts);
+
+  function locationLabel(evt: LocationEvent) {
+    if (evt.eventType === 'checkin') return `${evt.volunteerName} checked in @ ${evt.location}`;
+    if (evt.eventType === 'checkout') return `${evt.volunteerName} checked out`;
+    return `${evt.volunteerName} → ${evt.location}`;
+  }
+
   return (
     <div>
       {myName && (
@@ -62,11 +78,22 @@ export default function Announcements({ announcements, role, myName, api }: Prop
       )}
 
       <div className="card">
-        <div className="card-title">Announcements</div>
-        {announcements.length === 0 && (
-          <div className="empty-state">No announcements yet</div>
+        <div className="card-title">Chat</div>
+        {timeline.length === 0 && (
+          <div className="empty-state">No activity yet</div>
         )}
-        {[...announcements].reverse().map(ann => {
+        {timeline.map(item => {
+          if (item.kind === 'location') {
+            return (
+              <div key={item.data.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--gray-100)', fontSize: 12, color: 'var(--gray-500)' }}>
+                <span>📍</span>
+                <span style={{ flex: 1 }}>{locationLabel(item.data)}</span>
+                <span>{timeAgo(item.ts)}</span>
+              </div>
+            );
+          }
+
+          const ann = item.data as Announcement;
           const myReaction = myName
             ? ann.reactions?.onIt?.includes(myName) ? 'onIt'
             : ann.reactions?.question?.includes(myName) ? 'question'
@@ -88,7 +115,6 @@ export default function Announcements({ announcements, role, myName, api }: Prop
                 )}
               </div>
 
-              {/* Reactions summary */}
               {((ann.reactions?.onIt?.length ?? 0) > 0 || (ann.reactions?.question?.length ?? 0) > 0) && (
                 <div style={{ fontSize: 12, color: 'var(--gray-600)', marginTop: 6 }}>
                   {(ann.reactions?.onIt?.length ?? 0) > 0 && (
@@ -100,7 +126,6 @@ export default function Announcements({ announcements, role, myName, api }: Prop
                 </div>
               )}
 
-              {/* Replies */}
               {(ann.replies?.length ?? 0) > 0 && (
                 <div style={{ marginTop: 8, borderLeft: '2px solid var(--gray-200)', paddingLeft: 10 }}>
                   {ann.replies.map(r => (
@@ -112,7 +137,6 @@ export default function Announcements({ announcements, role, myName, api }: Prop
                 </div>
               )}
 
-              {/* Action buttons */}
               {myName && (
                 <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                   <button
