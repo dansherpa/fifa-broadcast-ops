@@ -128,6 +128,17 @@ export default function App() {
               </button>
             </span>
           )}
+          {role === 'volunteer' && me && (
+            <span style={{ marginLeft: 8 }}>
+              · {me.name}
+              <button
+                style={{ marginLeft: 6, fontSize: 10, padding: '2px 6px', background: 'rgba(255,255,255,0.2)', color: 'white', borderRadius: 8, border: 'none' }}
+                onClick={() => { setMyId(null); localStorage.removeItem('fifa-my-id'); }}
+              >
+                switch
+              </button>
+            </span>
+          )}
           <button
             className={`notify-btn ${notificationPermission === 'granted' ? 'on' : ''}`}
             onClick={requestPermission}
