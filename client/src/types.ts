@@ -31,6 +31,7 @@ export interface Announcement {
   message: string;
   createdAt: number;
   createdBy: string;
+  createdByRole: 'volunteer' | 'intern';
   reactions: { onIt: string[]; question: string[] };
   replies: AnnouncementReply[];
 }

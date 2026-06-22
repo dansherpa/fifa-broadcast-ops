@@ -84,7 +84,7 @@ function loadState(): boolean {
       const data = JSON.parse(raw);
       if (data.volunteers) { VOLUNTEER_POOL.length = 0; VOLUNTEER_POOL.push(...data.volunteers); }
       if (data.escorts) { escorts.length = 0; escorts.push(...data.escorts); }
-      if (data.announcements) { announcements.length = 0; announcements.push(...data.announcements.map((a: Announcement) => ({ reactions: { onIt: [], question: [] }, replies: [], ...a }))); }
+      if (data.announcements) { announcements.length = 0; announcements.push(...data.announcements.map((a: Announcement) => ({ createdByRole: 'intern', reactions: { onIt: [], question: [] }, replies: [], ...a }))); }
       if (data.interns) { INTERNS.length = 0; INTERNS.push(...data.interns); }
       if (data.staff) { STAFF.length = 0; STAFF.push(...data.staff); }
       if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
@@ -134,6 +134,7 @@ interface Announcement {
   message: string;
   createdAt: number;
   createdBy: string;
+  createdByRole: 'volunteer' | 'intern';
   reactions: { onIt: string[]; question: string[] };
   replies: AnnouncementReply[];
 }
@@ -396,6 +397,7 @@ app.post('/api/announcements', (req, res) => {
     message: req.body.message,
     createdAt: Date.now(),
     createdBy: req.body.createdBy || 'Staff',
+    createdByRole: req.body.createdByRole === 'volunteer' ? 'volunteer' : 'intern',
     reactions: { onIt: [], question: [] },
     replies: [],
   };

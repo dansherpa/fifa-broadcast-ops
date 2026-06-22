@@ -17,8 +17,8 @@ export default function Announcements({ announcements, role, myName, api }: Prop
   const [showReply, setShowReply] = useState<Record<string, boolean>>({});
 
   async function handlePost() {
-    if (!message.trim()) return;
-    await api.post('/api/announcements', { message, createdBy: myName || 'Staff' });
+    if (!message.trim() || !myName) return;
+    await api.post('/api/announcements', { message, createdBy: myName, createdByRole: role === 'intern' ? 'intern' : 'volunteer' });
     setMessage('');
   }
 
@@ -44,19 +44,19 @@ export default function Announcements({ announcements, role, myName, api }: Prop
 
   return (
     <div>
-      {role === 'intern' && (
+      {myName && (
         <div className="card">
-          <div className="card-title">Post Announcement</div>
+          <div className="card-title">{role === 'intern' ? 'Post Announcement' : 'Send a Message'}</div>
           <div className="form-row">
             <textarea
               rows={2}
-              placeholder="e.g. Please take your lunches when prompted!"
+              placeholder={role === 'intern' ? 'e.g. Please take your lunches when prompted!' : 'e.g. Can someone cover Media Center?'}
               value={message}
               onChange={e => setMessage(e.target.value)}
             />
           </div>
           <button className="btn-primary" onClick={handlePost}>
-            Broadcast to All
+            {role === 'intern' ? 'Broadcast to All' : 'Send'}
           </button>
         </div>
       )}
@@ -75,7 +75,7 @@ export default function Announcements({ announcements, role, myName, api }: Prop
 
           return (
             <div key={ann.id} className="announcement">
-              <div className="announcement-text">{ann.message}</div>
+              <div className="announcement-text" style={ann.createdByRole === 'intern' ? { fontWeight: 700 } : undefined}>{ann.message}</div>
               <div className="announcement-meta">
                 {ann.createdBy} · {timeAgo(ann.createdAt)}
                 {role === 'intern' && (

@@ -168,6 +168,9 @@ export default function App() {
         <button className={`tab ${tab === 'board' ? 'active' : ''}`} onClick={() => setTab('board')}>
           Board
         </button>
+        <button className={`tab ${tab === 'announce' ? 'active' : ''}`} onClick={() => setTab('announce')}>
+          Chat
+        </button>
         <button className={`tab ${tab === 'escorts' ? 'active' : ''}`} onClick={() => setTab('escorts')}>
           Escorts{pendingEscorts > 0 && <span className="badge">{pendingEscorts}</span>}
         </button>
@@ -176,9 +179,6 @@ export default function App() {
             My Status
           </button>
         )}
-        <button className={`tab ${tab === 'announce' ? 'active' : ''}`} onClick={() => setTab('announce')}>
-          Alerts
-        </button>
         <button className={`tab ${tab === 'coverage' ? 'active' : ''}`} onClick={() => setTab('coverage')}>
           Coverage
         </button>
