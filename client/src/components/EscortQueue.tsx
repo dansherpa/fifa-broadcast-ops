@@ -7,13 +7,15 @@ interface Props {
   locations: string[];
   role: string;
   myId: string | null;
-  internName?: string | null;
+  myName?: string | null;
   api: { post: (url: string, body?: object) => Promise<unknown> };
 }
 
-export default function EscortQueue({ escorts, volunteers, locations, role, myId, internName, api }: Props) {
+export default function EscortQueue({ escorts, volunteers, locations, role, myId, myName, api }: Props) {
   const [showForm, setShowForm] = useState(false);
   const [mp, setMp] = useState('');
+  const [company, setCompany] = useState('');
+  const [phone, setPhone] = useState('');
   const [from, setFrom] = useState('Media Center');
   const [to, setTo] = useState('BIO');
 
@@ -23,8 +25,17 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
 
   async function handleCreate() {
     if (!mp.trim()) return;
-    await api.post('/api/escorts', { mediaPartner: mp, from, to, createdBy: internName || 'Intern' });
+    await api.post('/api/escorts', {
+      mediaPartner: mp,
+      company: company.trim() || undefined,
+      phone: phone.trim() || undefined,
+      from,
+      to,
+      createdBy: myName || (role === 'intern' ? 'Intern' : 'Volunteer'),
+    });
     setMp('');
+    setCompany('');
+    setPhone('');
     setShowForm(false);
   }
 
@@ -54,25 +65,41 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
 
   return (
     <div>
-      {role === 'intern' && (
-        <div style={{ padding: 12 }}>
-          <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
-            + New Escort Request
-          </button>
-        </div>
-      )}
+      <div style={{ padding: 12 }}>
+        <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
+          + New Escort Request
+        </button>
+      </div>
 
       {showForm && (
         <div className="card">
-          <div className="card-title">New Escort</div>
+          <div className="card-title">New Escort Request</div>
           <div className="form-row">
-            <label>Media Partner</label>
+            <label>Media Partner Name *</label>
             <input
               type="text"
-              placeholder="e.g. SVT, CCTV, ITV Sport"
+              placeholder="e.g. Johan Lindström"
               value={mp}
               onChange={e => setMp(e.target.value)}
               autoFocus
+            />
+          </div>
+          <div className="form-row">
+            <label>Company</label>
+            <input
+              type="text"
+              placeholder="e.g. SVT, CCTV, ITV Sport"
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+            />
+          </div>
+          <div className="form-row">
+            <label>Phone (with country code)</label>
+            <input
+              type="tel"
+              placeholder="e.g. +46 70 123 4567"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
             />
           </div>
           <div className="form-row">
@@ -87,7 +114,10 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
               {locations.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
-          <button className="btn-primary" onClick={handleCreate}>Create Escort Request</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-primary" style={{ flex: 1 }} onClick={handleCreate}>Submit</button>
+            <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setShowForm(false)}>Cancel</button>
+          </div>
         </div>
       )}
 
@@ -97,13 +127,22 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
           {pending.map(e => (
             <div key={e.id} className="escort-item pending">
               <div className="escort-mp">{e.mediaPartner}</div>
+              {(e.company || e.phone) && (
+                <div style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 2 }}>
+                  {e.company && <span>{e.company}</span>}
+                  {e.company && e.phone && <span> · </span>}
+                  {e.phone && <a href={`tel:${e.phone}`} style={{ color: 'var(--blue)' }}>{e.phone}</a>}
+                </div>
+              )}
               <div className="escort-route">{e.from} → {e.to}</div>
-              <div className="time-ago">{timeAgo(e.createdAt)}</div>
-              <div className="escort-actions">
-                <button className="btn-claim" onClick={() => handleClaim(e.id)}>
-                  Claim This Escort
-                </button>
-              </div>
+              <div className="time-ago">{timeAgo(e.createdAt)} · via {e.createdBy}</div>
+              {role === 'volunteer' && (
+                <div className="escort-actions">
+                  <button className="btn-claim" onClick={() => handleClaim(e.id)}>
+                    Claim This Escort
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -115,6 +154,13 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
           {active.map(e => (
             <div key={e.id} className="escort-item claimed">
               <div className="escort-mp">{e.mediaPartner}</div>
+              {(e.company || e.phone) && (
+                <div style={{ fontSize: 13, color: 'var(--gray-600)', marginTop: 2 }}>
+                  {e.company && <span>{e.company}</span>}
+                  {e.company && e.phone && <span> · </span>}
+                  {e.phone && <a href={`tel:${e.phone}`} style={{ color: 'var(--blue)' }}>{e.phone}</a>}
+                </div>
+              )}
               <div className="escort-route">{e.from} → {e.to}</div>
               <div style={{ fontSize: 13, marginTop: 4 }}>
                 Escort: <strong>{getVolunteerName(e.assignedTo)}</strong>
@@ -137,6 +183,7 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
           {completed.map(e => (
             <div key={e.id} className="escort-item completed">
               <div className="escort-mp">{e.mediaPartner}</div>
+              {e.company && <div style={{ fontSize: 12, color: 'var(--gray-500)' }}>{e.company}</div>}
               <div className="escort-route">{e.from} → {e.to}</div>
               <div style={{ fontSize: 12 }}>
                 By {getVolunteerName(e.assignedTo)} · {timeAgo(e.completedAt || e.createdAt)}

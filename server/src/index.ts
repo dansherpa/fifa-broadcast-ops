@@ -115,6 +115,8 @@ interface Volunteer {
 interface EscortTask {
   id: string;
   mediaPartner: string;
+  company?: string;
+  phone?: string;
   from: string;
   to: string;
   status: 'pending' | 'claimed' | 'completed';
@@ -359,11 +361,13 @@ app.post('/api/escorts', (req, res) => {
   const task: EscortTask = {
     id: uuid(),
     mediaPartner: req.body.mediaPartner,
+    company: req.body.company || undefined,
+    phone: req.body.phone || undefined,
     from: req.body.from,
     to: req.body.to,
     status: 'pending',
     createdAt: Date.now(),
-    createdBy: req.body.createdBy || 'Intern',
+    createdBy: req.body.createdBy || 'Volunteer',
   };
   escorts.unshift(task);
   broadcast({ type: 'state', data: getState() });

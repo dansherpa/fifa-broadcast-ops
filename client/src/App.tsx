@@ -252,7 +252,7 @@ export default function App() {
           locations={state.locations}
           role={role}
           myId={myId}
-          internName={internName}
+          myName={role === 'volunteer' ? (me?.name ?? null) : (internName ?? null)}
           api={api}
         />
       )}

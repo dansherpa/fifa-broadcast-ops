@@ -10,6 +10,8 @@ export interface Volunteer {
 export interface EscortTask {
   id: string;
   mediaPartner: string;
+  company?: string;
+  phone?: string;
   from: string;
   to: string;
   status: 'pending' | 'claimed' | 'completed';
