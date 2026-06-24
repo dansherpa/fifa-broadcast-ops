@@ -69,6 +69,7 @@ function saveState() {
     escorts,
     announcements,
     locationEvents: locationEvents.slice(-200),
+    escortEvents: escortEvents.slice(-200),
     interns: INTERNS,
     staff: STAFF,
     locations: LOCATIONS,
@@ -91,6 +92,7 @@ function loadState(): boolean {
       if (data.locations) { LOCATIONS.length = 0; LOCATIONS.push(...data.locations); }
       if (data.coverageRules) { coverageRules.length = 0; coverageRules.push(...data.coverageRules); }
       if (data.locationEvents) { locationEvents.length = 0; locationEvents.push(...data.locationEvents); }
+      if (data.escortEvents) { escortEvents.length = 0; escortEvents.push(...data.escortEvents); }
       if (data.pushSubscriptions) { pushSubscriptions.length = 0; pushSubscriptions.push(...data.pushSubscriptions); }
       console.log('State loaded from', STATE_FILE);
       return true;
@@ -124,6 +126,17 @@ interface EscortTask {
   createdAt: number;
   createdBy: string;
   completedAt?: number;
+}
+
+interface EscortEvent {
+  id: string;
+  eventType: 'created' | 'claimed' | 'completed';
+  mediaPartner: string;
+  company?: string;
+  from: string;
+  to: string;
+  actorName: string;
+  timestamp: number;
 }
 
 interface AnnouncementReply {
@@ -198,6 +211,7 @@ const VOLUNTEER_POOL: Volunteer[] = [
 let escorts: EscortTask[] = [];
 let announcements: Announcement[] = [];
 let locationEvents: LocationEvent[] = [];
+let escortEvents: EscortEvent[] = [];
 
 const INTERNS: string[] = [
   'Stella', 'Kira', 'Isabelle', 'Cobi', 'Diyah',
@@ -278,6 +292,7 @@ function getState() {
     escorts,
     announcements: announcements.slice(-20),
     locationEvents: locationEvents.slice(-200),
+    escortEvents: escortEvents.slice(-200),
     locations: sortedLocations(),
     interns: sortedInterns(),
     staff: sortedStaff(),
@@ -370,6 +385,7 @@ app.post('/api/escorts', (req, res) => {
     createdBy: req.body.createdBy || 'Volunteer',
   };
   escorts.unshift(task);
+  escortEvents.push({ id: uuid(), eventType: 'created', mediaPartner: task.mediaPartner, company: task.company, from: task.from, to: task.to, actorName: task.createdBy, timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   sendPushToAll('Escort Needed', `${task.mediaPartner}: ${task.from} → ${task.to}`, `escort-${task.id}`);
   res.json(task);
@@ -387,6 +403,7 @@ app.post('/api/escorts/:id/claim', (req, res) => {
     vol.location = 'En Route';
     vol.lastUpdate = Date.now();
   }
+  escortEvents.push({ id: uuid(), eventType: 'claimed', mediaPartner: task.mediaPartner, company: task.company, from: task.from, to: task.to, actorName: vol?.name || 'Volunteer', timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   res.json(task);
 });
@@ -397,14 +414,13 @@ app.post('/api/escorts/:id/complete', (req, res) => {
   if (!task) return res.status(404).json({ error: 'Not found' });
   task.status = 'completed';
   task.completedAt = Date.now();
-  if (task.assignedTo) {
-    const vol = VOLUNTEER_POOL.find(v => v.id === task.assignedTo);
-    if (vol) {
-      vol.status = 'available';
-      vol.location = task.to;
-      vol.lastUpdate = Date.now();
-    }
+  const completingVol = task.assignedTo ? VOLUNTEER_POOL.find(v => v.id === task.assignedTo) : undefined;
+  if (completingVol) {
+    completingVol.status = 'available';
+    completingVol.location = task.to;
+    completingVol.lastUpdate = Date.now();
   }
+  escortEvents.push({ id: uuid(), eventType: 'completed', mediaPartner: task.mediaPartner, company: task.company, from: task.from, to: task.to, actorName: completingVol?.name || 'Volunteer', timestamp: Date.now() });
   broadcast({ type: 'state', data: getState() });
   res.json(task);
 });
@@ -475,6 +491,7 @@ app.post('/api/reset-day', (req, res) => {
   escorts.length = 0;
   announcements.length = 0;
   locationEvents.length = 0;
+  escortEvents.length = 0;
   broadcast({ type: 'state', data: getState() });
   saveState();
   res.json({ ok: true });

@@ -51,11 +51,23 @@ export interface LocationEvent {
   timestamp: number;
 }
 
+export interface EscortEvent {
+  id: string;
+  eventType: 'created' | 'claimed' | 'completed';
+  mediaPartner: string;
+  company?: string;
+  from: string;
+  to: string;
+  actorName: string;
+  timestamp: number;
+}
+
 export interface AppState {
   volunteers: Volunteer[];
   escorts: EscortTask[];
   announcements: Announcement[];
   locationEvents: LocationEvent[];
+  escortEvents: EscortEvent[];
   locations: string[];
   interns: string[];
   staff: string[];

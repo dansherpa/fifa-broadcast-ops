@@ -272,6 +272,7 @@ export default function App() {
         <Announcements
           announcements={state.announcements}
           locationEvents={state.locationEvents ?? []}
+          escortEvents={state.escortEvents ?? []}
           role={role}
           myName={role === 'volunteer' ? (me?.name ?? null) : (internName ?? null)}
           api={api}

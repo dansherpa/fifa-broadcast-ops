@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Announcement, LocationEvent } from '../types';
+import { Announcement, LocationEvent, EscortEvent } from '../types';
 
 interface Props {
   announcements: Announcement[];
   locationEvents: LocationEvent[];
+  escortEvents: EscortEvent[];
   role: string;
   myName?: string | null;
   api: {
@@ -12,7 +13,7 @@ interface Props {
   };
 }
 
-export default function Announcements({ announcements, locationEvents, role, myName, api }: Props) {
+export default function Announcements({ announcements, locationEvents, escortEvents, role, myName, api }: Props) {
   const [message, setMessage] = useState('');
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [showReply, setShowReply] = useState<Record<string, boolean>>({});
@@ -45,11 +46,13 @@ export default function Announcements({ announcements, locationEvents, role, myN
 
   type TimelineItem =
     | { kind: 'announcement'; data: Announcement; ts: number }
-    | { kind: 'location'; data: LocationEvent; ts: number };
+    | { kind: 'location'; data: LocationEvent; ts: number }
+    | { kind: 'escort'; data: EscortEvent; ts: number };
 
   const timeline: TimelineItem[] = [
     ...announcements.map(a => ({ kind: 'announcement' as const, data: a, ts: a.createdAt })),
     ...locationEvents.map(e => ({ kind: 'location' as const, data: e, ts: e.timestamp })),
+    ...escortEvents.map(e => ({ kind: 'escort' as const, data: e, ts: e.timestamp })),
   ].sort((a, b) => b.ts - a.ts);
 
   function locationLabel(evt: LocationEvent) {
@@ -88,6 +91,23 @@ export default function Announcements({ announcements, locationEvents, role, myN
               <div key={item.data.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--gray-100)', fontSize: 12, color: 'var(--gray-500)' }}>
                 <span>📍</span>
                 <span style={{ flex: 1 }}>{locationLabel(item.data)}</span>
+                <span>{timeAgo(item.ts)}</span>
+              </div>
+            );
+          }
+
+          if (item.kind === 'escort') {
+            const e = item.data;
+            const icon = e.eventType === 'created' ? '📋' : e.eventType === 'claimed' ? '🚶' : '✅';
+            const label = e.eventType === 'created'
+              ? `${e.actorName} submitted: ${e.mediaPartner}${e.company ? ` (${e.company})` : ''} → ${e.to}`
+              : e.eventType === 'claimed'
+              ? `${e.actorName} claimed: ${e.mediaPartner} → ${e.to}`
+              : `${e.actorName} delivered: ${e.mediaPartner} to ${e.to}`;
+            return (
+              <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--gray-100)', fontSize: 12, color: 'var(--gray-500)' }}>
+                <span>{icon}</span>
+                <span style={{ flex: 1 }}>{label}</span>
                 <span>{timeAgo(item.ts)}</span>
               </div>
             );
