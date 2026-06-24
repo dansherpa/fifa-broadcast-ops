@@ -56,6 +56,24 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
     return volunteers.find(v => v.id === id)?.name || 'Unknown';
   }
 
+  function saveVCard(e: EscortTask) {
+    const lines = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN:${e.mediaPartner}`,
+      e.company ? `ORG:${e.company}` : '',
+      e.phone ? `TEL;TYPE=CELL:${e.phone}` : '',
+      'END:VCARD',
+    ].filter(Boolean).join('\r\n');
+    const blob = new Blob([lines], { type: 'text/vcard' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${e.mediaPartner.replace(/\s+/g, '_')}.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function timeAgo(ts: number) {
     const mins = Math.floor((Date.now() - ts) / 60000);
     if (mins < 1) return 'just now';
@@ -136,13 +154,18 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
               )}
               <div className="escort-route">{e.from} → {e.to}</div>
               <div className="time-ago">{timeAgo(e.createdAt)} · via {e.createdBy}</div>
-              {role === 'volunteer' && (
-                <div className="escort-actions">
-                  <button className="btn-claim" onClick={() => handleClaim(e.id)}>
+              <div className="escort-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {e.phone && (
+                  <button className="btn-secondary" style={{ flex: '0 0 auto' }} onClick={() => saveVCard(e)}>
+                    Save Contact
+                  </button>
+                )}
+                {role === 'volunteer' && (
+                  <button className="btn-claim" style={{ flex: 1 }} onClick={() => handleClaim(e.id)}>
                     Claim This Escort
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -165,9 +188,14 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
               <div style={{ fontSize: 13, marginTop: 4 }}>
                 Escort: <strong>{getVolunteerName(e.assignedTo)}</strong>
               </div>
-              <div className="escort-actions">
+              <div className="escort-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {e.phone && (
+                  <button className="btn-secondary" style={{ flex: '0 0 auto' }} onClick={() => saveVCard(e)}>
+                    Save Contact
+                  </button>
+                )}
                 {(e.assignedTo === myId || role === 'intern') && (
-                  <button className="btn-complete" onClick={() => handleComplete(e.id)}>
+                  <button className="btn-complete" style={{ flex: 1 }} onClick={() => handleComplete(e.id)}>
                     Mark Delivered
                   </button>
                 )}
