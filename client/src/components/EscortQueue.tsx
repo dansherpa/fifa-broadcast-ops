@@ -61,6 +61,7 @@ export default function EscortQueue({ escorts, volunteers, locations, role, myId
       'BEGIN:VCARD',
       'VERSION:3.0',
       `FN:${e.mediaPartner}`,
+      `N:${e.mediaPartner};;;;`,
       e.company ? `ORG:${e.company}` : '',
       e.phone ? `TEL;TYPE=CELL:${e.phone}` : '',
       'END:VCARD',
