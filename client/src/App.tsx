@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useWebSocket } from './hooks/useWebSocket';
 import { useApi } from './hooks/useApi';
 import { Volunteer } from './types';
@@ -33,6 +34,7 @@ export default function App() {
   const [showManageLocations, setShowManageLocations] = useState(false);
   const [showManageInterns, setShowManageInterns] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   if (!state) {
     return (
@@ -141,6 +143,13 @@ export default function App() {
             </span>
           )}
           <button
+            className="notify-btn"
+            onClick={() => setShowQR(true)}
+            title="Share app link"
+          >
+            📷
+          </button>
+          <button
             className={`notify-btn ${notificationPermission === 'granted' ? 'on' : ''}`}
             onClick={requestPermission}
             title={notificationPermission === 'granted' ? 'Notifications on' : 'Enable notifications'}
@@ -149,6 +158,19 @@ export default function App() {
           </button>
         </div>
       </div>
+
+      {showQR && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setShowQR(false)}>
+          <div style={{ background: 'white', borderRadius: 16, padding: 32, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 4 }}>Scan to open the app</div>
+            <div style={{ fontSize: 13, color: 'var(--gray-500)', marginBottom: 20 }}>Point your phone camera at this code</div>
+            <QRCodeSVG value="https://fifa-broadcast-ops-production.up.railway.app/" size={220} />
+            <div style={{ marginTop: 20 }}>
+              <button className="btn-secondary" onClick={() => setShowQR(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="role-selector">
         <button
