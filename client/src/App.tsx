@@ -175,11 +175,6 @@ export default function App() {
         <button className={`tab ${tab === 'escorts' ? 'active' : ''}`} onClick={() => setTab('escorts')}>
           🚶 Escorts{pendingEscorts > 0 && <span className="badge">{pendingEscorts}</span>}
         </button>
-        {role === 'volunteer' && (
-          <button className={`tab ${tab === 'me' ? 'active' : ''}`} onClick={() => setTab('me')}>
-            👤 My Status
-          </button>
-        )}
         <button className={`tab ${tab === 'coverage' ? 'active' : ''}`} onClick={() => setTab('coverage')}>
           📊 Coverage
         </button>
@@ -187,6 +182,13 @@ export default function App() {
           ❓ Help
         </button>
       </div>
+      {role === 'volunteer' && (
+        <div className="tabs" style={{ position: 'sticky', top: 110, borderTop: '1px solid var(--gray-200)' }}>
+          <button className={`tab ${tab === 'me' ? 'active' : ''}`} style={{ flex: 1 }} onClick={() => setTab('me')}>
+            👤 My Status
+          </button>
+        </div>
+      )}
 
       {role === 'intern' && tab === 'board' && (
         <div style={{ padding: '12px 12px 0', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
