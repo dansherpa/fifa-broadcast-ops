@@ -167,24 +167,24 @@ export default function App() {
 
       <div className="tabs">
         <button className={`tab ${tab === 'board' ? 'active' : ''}`} onClick={() => setTab('board')}>
-          Board
+          📋 Board
         </button>
         <button className={`tab ${tab === 'announce' ? 'active' : ''}`} onClick={() => setTab('announce')}>
-          Chat
+          💬 Chat
         </button>
         <button className={`tab ${tab === 'escorts' ? 'active' : ''}`} onClick={() => setTab('escorts')}>
-          Escorts{pendingEscorts > 0 && <span className="badge">{pendingEscorts}</span>}
+          🚶 Escorts{pendingEscorts > 0 && <span className="badge">{pendingEscorts}</span>}
         </button>
         {role === 'volunteer' && (
           <button className={`tab ${tab === 'me' ? 'active' : ''}`} onClick={() => setTab('me')}>
-            My Status
+            👤 My Status
           </button>
         )}
         <button className={`tab ${tab === 'coverage' ? 'active' : ''}`} onClick={() => setTab('coverage')}>
-          Coverage
+          📊 Coverage
         </button>
         <button className={`tab ${tab === 'help' ? 'active' : ''}`} onClick={() => setTab('help')}>
-          Help
+          ❓ Help
         </button>
       </div>
 
